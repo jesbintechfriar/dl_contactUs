@@ -19,6 +19,10 @@ const contactUsSchema = mongoose.Schema({
             message: 'Invalid email format',
         },
     },
+    country_code:{
+        type: String,
+        required:true,
+    },
     phone: {
         type: Number,
         required: true,

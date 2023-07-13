@@ -2,7 +2,7 @@ import express from 'express'
 import connectDB from './config/db.js';
 import dotenv from 'dotenv';
 import { errorHandler, notFound } from './middlewares/errorMiddleware.js';
-import contactUsRouter from './routes/contactUsRoutes.js';
+import contactUsRouter from './routes/admin.js';
 
 dotenv.config() //config .env file
 

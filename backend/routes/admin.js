@@ -1,9 +1,9 @@
 import express from 'express'
-import { deleteMessage, findMessageById, insertMessage, listMessages, updateRead } from '../controllers/contactUsController.js';
+import { addMessage, deleteMessage, findMessageById, listMessages, updateRead } from '../controllers/contactUsController.js';
 
 const router = express.Router();
 router.route('/').get(listMessages);
-router.route('/insert').post(insertMessage);
+router.route('/add').post(addMessage);
 router.route('/find').post(findMessageById);
 router.route('/update-read').put(updateRead);
 router.route('/delete').delete(deleteMessage);

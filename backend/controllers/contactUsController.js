@@ -1,32 +1,48 @@
 import asyncHandler from 'express-async-handler';
-import ContactUs from '../models/contactUsModels.js';
+import addMessageRequest from '../requests/addMessageRequest.js';
+import ContactUsRepository from '../repository/contactUsRepository.js';
+import contactUsResource from '../resources/contactUsResources.js';
+import FindMessageRequest from '../requests/findMessageRequest.js';
+import UpdateReadRequest from '../requests/updateReadRequest.js';
+import DeleteMessageRequest from '../requests/deleteMessageRequest.js';
 
+const contactUsRepo = new ContactUsRepository();
 
 /*
-api/contact-us/insert
+api/contact-us/add
 parameters: name,email,phone,message
 method: POST
 response: _id,message
 */
-const insertMessage = asyncHandler(async (req, res) => {
-    const { name, email, phone, message } = req.query;
-    const insert = await ContactUs.create({
-        name: name,
-        email: email,
-        phone: phone,
-        message: message,
-    });
-    if (insert) {
-        res.status(200).json({
-            _id: insert._id,
-            message: `Hi ${insert.name} we will contact you soon`
-        })
+const addMessage = asyncHandler(async (req, res) => {
+    const { name, email, phone, message, country_code } = req.query;
+    const messageRequest = new addMessageRequest({
+        name,
+        email,
+        country_code,
+        phone,
+        message
+    })
+    try {
+        const validatedData = await messageRequest.validate();
+        const newMessage = await contactUsRepo.addMessage(validatedData);
+        if (newMessage) {
+            const messageResource = contactUsResource(newMessage);
+            res.status(200).json({
+                data: messageResource,
+                message: "We will contact you soon"
+            })
+        }
+        else {
+            res.status(400);
+            throw new Error("Unable to place request")
+        }
     }
-    else {
-        res.status(400);
-        throw new Error("An error occured");
+    catch (e) {
+        res.status(400).json({ error: e.message });
     }
 })
+
 
 
 
@@ -37,13 +53,13 @@ method: GET
 response: list of messages(_id,name,email,phone,message,read,created_at,updated_at)
  */
 const listMessages = asyncHandler(async (req, res) => {
-    const messages = await ContactUs.find();//select all documents from contactus collection
+    const messages = await contactUsRepo.listMessages();//select all documents from contactus collection
     if (messages) {
         res.status(200).json(messages)
     }
     else {
         res.status(400);
-        throw new Error("Some error occured")
+        throw new Error("Unable to get messages")
     }
 })
 
@@ -57,13 +73,22 @@ response: list of message(_id,name,email,phone,message,read,created_at,updated_a
 */
 const findMessageById = asyncHandler(async (req, res) => {
     const id = req.query.id;
-    const message = await ContactUs.findOne({ _id: id });//select one document based on the id
-    if (message) {
-        res.status(200).json(message);
+    const messageRequest = new FindMessageRequest({
+        id
+    });
+    try {
+        const validatedData = await messageRequest.validate();
+        const message = await contactUsRepo.findMessage(validatedData);
+        if (message) {
+            res.status(200).json(message);
+        }
+        else {
+            res.status(400);
+            throw new Error("Unable to get message")
+        }
     }
-    else {
-        res.status(400);
-        throw new Error("An error occured/Invalid Id");
+    catch (e) {
+        res.status(400).json({ error: e.message });
     }
 })
 
@@ -77,34 +102,21 @@ response: id,message
 */
 const updateRead = asyncHandler(async (req, res) => {
     const { id, status } = req.query;
-    const findMessage = await ContactUs.findOne({ _id: id }); //find one document based on id
-
-    //check if the status is given or not
-    if (status != undefined) { 
-         //check if document available on the given id
-        if (findMessage) { 
-            findMessage.read = status;
-            findMessage.updated_at = Date.now();
-            const save = await findMessage.save();
-            if (save) {
-                res.status(200).json({
-                    message: `read status set to ${status}`
-                })
-            }
-            else {
-                res.status(400);
-                throw new Error("An error occured");
-            }
+    const messageRequest = new UpdateReadRequest({ id, status });
+    try {
+        const validatedData = await messageRequest.validate();
+        const updatedData = await contactUsRepo.updateReadStatus(validatedData);
+        if (updatedData) {
+            res.status(200).json({
+                message: `read status set to ${updatedData.read}`
+            })
         }
         else {
-            res.status(400);
-            throw new Error("Invalid Id")
+            throw new Error("Unable to change read status")
         }
     }
-    else {
-        res.status(200).json({
-            message: "status is required"
-        })
+    catch (e) {
+        res.status(400).json({ error: e.message });
     }
 })
 
@@ -117,29 +129,26 @@ parameters: id
 method: DELETE
 response: id,message
 */
-const deleteMessage = asyncHandler(async (req,res)=>{
+const deleteMessage = asyncHandler(async (req, res) => {
     const id = req.query.id;
-    const findMessage = await ContactUs.findOne({ _id: id });//find one document based on the id
-
-    //check if document available or not
-    if (findMessage) {
-        const deleteMessage = await ContactUs.findOneAndDelete({_id:id});//find the document and delete 
-        //check if document deleted or not
-        if(deleteMessage){
+    const messageRequest = new DeleteMessageRequest({
+        id
+    });
+    try {
+        const validatedData = await messageRequest.validate();
+        const deleteMessage = await contactUsRepo.deleteMessage(validatedData);
+        if (deleteMessage) {
             res.status(200).json({
-                _id:deleteMessage.id,
-                message:"Message deleted"
+                message: "Message deleted successfully"
             })
         }
-        else{
-            res.status(400);
-            throw new Error("An error occured")
+        else {
+            throw new Error("Unable to delete message")
         }
     }
-    else{
-        res.status(400);
-        throw new Error("Invalid ID")
+    catch (e) {
+        res.status(400).json({ error: e.message });
     }
 })
 
-export { insertMessage, listMessages, findMessageById, updateRead,deleteMessage };
+export { listMessages, findMessageById, updateRead, deleteMessage, addMessage };
