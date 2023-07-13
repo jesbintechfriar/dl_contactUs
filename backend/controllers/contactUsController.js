@@ -151,4 +151,46 @@ const deleteMessage = asyncHandler(async (req, res) => {
     }
 })
 
-export { listMessages, findMessageById, updateRead, deleteMessage, addMessage };
+
+
+
+
+/*
+public/contact-us/add
+parameters: name,email,phone,message
+method: POST
+response: _id,message
+*/
+const publicAddMessage = asyncHandler(async (req, res) => {
+    const { name, email, phone, message, country_code } = req.query;
+    const messageRequest = new addMessageRequest({
+        name,
+        email,
+        country_code,
+        phone,
+        message
+    })
+    try {
+        const validatedData = await messageRequest.validate();
+        const newMessage = await contactUsRepo.addMessage(validatedData);
+        if (newMessage) {
+            const messageResource = contactUsResource(newMessage);
+            res.status(200).json({
+                data: messageResource,
+                message: "We will contact you soon"
+            })
+        }
+        else {
+            res.status(400);
+            throw new Error("Unable to place request")
+        }
+    }
+    catch (e) {
+        res.status(400).json({ error: e.message });
+    }
+})
+
+
+
+
+export { listMessages, findMessageById, updateRead, deleteMessage, addMessage, publicAddMessage };
