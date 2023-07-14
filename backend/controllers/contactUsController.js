@@ -10,9 +10,9 @@ const contactUsRepo = new ContactUsRepository();
 
 /*
 api/contact-us/add
-parameters: name,email,phone,message
-method: POST
-response: _id,message
+parameters: name,email,phone,message,country_code
+method: GET
+response: 
 */
 const addMessage = asyncHandler(async (req, res) => {
     const { name, email, phone, message, country_code } = req.query;

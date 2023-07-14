@@ -1,7 +1,6 @@
 {
   "name": "contact-us-api",
   "version": "1.0.0",
-  "description": "",
   "main": "backend/server.js",
   "type": "module",
   "scripts": {
@@ -17,6 +16,10 @@
     "express-async-handler": "^1.2.0",
     "joi": "^17.9.2",
     "mongoose": "^7.3.2",
-    "nodemon": "^3.0.1"
-  }
+    "nodemon": "^3.0.1",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.0"
+  },
+  "devDependencies": {},
+  "description": ""
 }
